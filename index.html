@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat App - Room Selectie</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="login">
+    <h2>Voer je gebruikersnaam en chatcode in</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Gebruikersnaam" required />
+      <input type="text" id="room" placeholder="Chatcode (bijv. abc123)" required />
+      <button type="submit">Start chat</button>
+    </form>
+  </div>
+
+  <div id="chat" style="display:none;">
+    <h3 id="roomTitle"></h3>
+    <ul id="messages"></ul>
+    <form id="form">
+      <input id="input" autocomplete="off" placeholder="Typ een bericht..." />
+      <button>Verzend</button>
+    </form>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
