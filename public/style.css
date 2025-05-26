@@ -41,3 +41,26 @@ button {
   padding: 10px;
   cursor: pointer;
 }
+
+@media (max-width: 600px) {
+  #chat, #login {
+    width: 90%;
+    padding: 15px;
+  }
+
+  #messages {
+    height: 50vh;
+  }
+
+  #form, #loginForm {
+    flex-direction: column;
+  }
+
+  #input, #username, #room {
+    margin-bottom: 10px;
+  }
+
+  button {
+    margin-left: 0;
+  }
+}
