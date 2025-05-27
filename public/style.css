@@ -35,35 +35,10 @@ body {
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 16px;
 }
 
 button {
   padding: 10px;
   cursor: pointer;
-}
-
-@media (max-width: 600px) {
-  #chat, #login {
-    width: 90%;
-    padding: 15px;
-  }
-
-  #messages {
-    height: 50vh;
-  }
-
-  #form, #loginForm {
-    flex-direction: column;
-  }
-
-  #input, #username, #room {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-  }
-
-  button {
-    margin-left: 0;
-  }
 }
