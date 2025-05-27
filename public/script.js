@@ -28,10 +28,15 @@ loginForm.addEventListener("submit", (e) => {
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
-  if (input.value) {
-    socket.emit("chat message", { room, user: username, text: input.value });
-    input.value = '';
+  const text = input.value.trim();
+  if (!text) return;
+  if (text.startsWith("/")) {
+    // Stuur command apart
+    socket.emit("admin command", { room, username, command: text });
+  } else {
+    socket.emit("chat message", { room, user: username, text });
   }
+  input.value = '';
 });
 
 socket.on("chat message", (msg) => {
@@ -47,4 +52,26 @@ socket.on("user joined", (name) => {
   item.style.fontStyle = "italic";
   messages.appendChild(item);
   messages.scrollTop = messages.scrollHeight;
+});
+
+socket.on("clear chat", () => {
+  messages.innerHTML = "";
+});
+
+socket.on("kick", (name) => {
+  if (name === username) {
+    alert("Je bent verwijderd uit de chat door een admin.");
+    window.location.reload();
+  }
+});
+
+socket.on("rename", ({ oldName, newName }) => {
+  if (username === oldName) {
+    username = newName;
+    alert(`Je naam is veranderd naar: ${newName}`);
+  }
+  const item = document.createElement("li");
+  item.textContent = `${oldName} heet nu ${newName}`;
+  item.style.fontStyle = "italic";
+  messages.appendChild(item);
 });
