@@ -2,37 +2,32 @@ const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
+const path = require("path");
 
 const PORT = process.env.PORT || 3000;
-
 app.use(express.static("public"));
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public/index.html")));
 
-const ADMIN_PASSWORD = "geheim123";
-
-const users = {};
+const rooms = {};
 const bannedUsers = {};
+const ADMIN_PASSWORD = "geheim123"; // 👈 verander dit naar jouw eigen admin-wachtwoord
 
 io.on("connection", (socket) => {
   socket.on("join room", ({ username, room, password }) => {
-    if (username === "admin" && password !== ADMIN_PASSWORD) {
-      socket.emit("chat message", {
-        user: "Systeem",
-        text: "Ongeldig admin-wachtwoord."
-      });
-      return;
-    }
-
-    if (!bannedUsers[room]) bannedUsers[room] = [];
-    if (bannedUsers[room].includes(username)) {
-      socket.emit("chat message", {
-        user: "Systeem",
-        text: "Je bent verbannen uit deze chat."
-      });
+    if (bannedUsers[room]?.includes(username)) {
+      socket.emit("chat message", { user: "Systeem", text: "Je bent verbannen uit deze chat." });
       return;
     }
 
     socket.join(room);
-    users[socket.id] = { username, room };
+    socket.username = username;
+    socket.room = room;
+
+    if (!rooms[room]) rooms[room] = { users: {}, admins: [] };
+    rooms[room].users[socket.id] = username;
+
+    if (password === ADMIN_PASSWORD) rooms[room].admins.push(username);
+
     io.to(room).emit("user joined", username);
   });
 
@@ -41,64 +36,48 @@ io.on("connection", (socket) => {
   });
 
   socket.on("admin command", ({ room, username, command }) => {
-    if (username !== "admin") return;
-    const parts = command.trim().split(" ");
+    if (!rooms[room]?.admins.includes(username)) return;
+
+    const parts = command.split(" ");
     const cmd = parts[0];
     const arg = parts[1];
 
     switch (cmd) {
+      case "/ban":
+        if (!bannedUsers[room]) bannedUsers[room] = [];
+        bannedUsers[room].push(arg);
+        io.to(room).emit("chat message", { user: "Systeem", text: `${arg} is verbannen.` });
+        break;
+      case "/kick":
+        for (let [id, name] of Object.entries(rooms[room].users)) {
+          if (name === arg) {
+            io.to(id).emit("kick", arg);
+            break;
+          }
+        }
+        break;
       case "/clear":
         io.to(room).emit("clear chat");
         break;
-      case "/kick":
-        if (!arg) return;
-        for (const [id, userInfo] of Object.entries(users)) {
-          if (userInfo.room === room && userInfo.username === arg) {
-            io.to(id).emit("kick", arg);
-            break;
-          }
-        }
-        break;
-      case "/ban":
-        if (!arg) return;
-        if (!bannedUsers[room]) bannedUsers[room] = [];
-        bannedUsers[room].push(arg);
-        for (const [id, userInfo] of Object.entries(users)) {
-          if (userInfo.room === room && userInfo.username === arg) {
-            io.to(id).emit("kick", arg);
-            break;
-          }
-        }
-        io.to(room).emit("chat message", {
-          user: "Systeem",
-          text: `${arg} is verbannen uit de chat.`
-        });
-        break;
       case "/rename":
-        if (!arg) return;
-        for (const [id, userInfo] of Object.entries(users)) {
-          if (userInfo.room === room && userInfo.username !== "admin") {
-            const oldName = userInfo.username;
-            users[id].username = arg;
-            io.to(id).emit("rename", { oldName, newName: arg });
+        const newName = parts[2];
+        for (let [id, name] of Object.entries(rooms[room].users)) {
+          if (name === arg) {
+            rooms[room].users[id] = newName;
+            io.to(id).emit("rename", { oldName: arg, newName });
             break;
           }
         }
-        break;
-      case "/help":
-        io.to(room).emit("chat message", {
-          user: "Systeem",
-          text: "Beschikbare commando's: /clear, /kick [naam], /ban [naam], /rename [naam], /help"
-        });
         break;
     }
   });
 
   socket.on("disconnect", () => {
-    delete users[socket.id];
+    const room = socket.room;
+    if (rooms[room]) {
+      delete rooms[room].users[socket.id];
+    }
   });
 });
 
-http.listen(PORT, () => {
-  console.log("Server draait op poort " + PORT);
-});
+http.listen(PORT, () => console.log("Server draait op poort " + PORT));
