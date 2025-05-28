@@ -1,30 +1,86 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
-  <title>Chat App met Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Chat App</title>
+  <style>
+    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+    #chat { width: 100%; max-width: 600px; height: 400px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+    input, button { padding: 10px; margin: 5px; font-size: 1em; }
+  </style>
 </head>
 <body>
+  <h1>Chat App</h1>
   <div id="login">
-    <h2>Voer je gebruikersnaam en chatcode in</h2>
-    <form id="loginForm">
-      <input type="text" id="username" placeholder="Gebruikersnaam" required />
-      <input type="text" id="room" placeholder="Chatcode (bijv. abc123)" required />
-      <button type="submit">Start chat</button>
-    </form>
+    <input type="text" id="username" placeholder="Gebruikersnaam" required />
+    <input type="text" id="room" placeholder="Chatcode (bijv. abc123)" required />
+    <input type="password" id="password" placeholder="(alleen admin) wachtwoord" />
+    <button id="join">Join</button>
   </div>
-
-  <div id="chat" style="display:none;">
-    <h3 id="roomTitle"></h3>
-    <ul id="messages"></ul>
-    <form id="form">
-      <input id="input" autocomplete="off" placeholder="Typ een bericht of /help..." />
-      <button>Verzend</button>
-    </form>
+  <div id="chatContainer" style="display:none;">
+    <div id="chat"></div>
+    <input id="message" placeholder="Typ een bericht..." autocomplete="off" /><button id="send">Stuur</button>
   </div>
-
   <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
+  <script>
+    const socket = io();
+    const chatBox = document.getElementById("chat");
+    const passwordInput = document.getElementById("password");
+    const joinBtn = document.getElementById("join");
+    const sendBtn = document.getElementById("send");
+    const messageInput = document.getElementById("message");
+    let currentUser = "";
+    let currentRoom = "";
+
+    joinBtn.onclick = () => {
+      const username = document.getElementById("username").value;
+      const room = document.getElementById("room").value;
+      const password = passwordInput?.value || "";
+      if (!username || !room) return;
+      currentUser = username;
+      currentRoom = room;
+      socket.emit("join room", { username, room, password });
+      document.getElementById("login").style.display = "none";
+      document.getElementById("chatContainer").style.display = "block";
+    };
+
+    sendBtn.onclick = () => {
+      const text = messageInput.value;
+      if (text.startsWith("/")) {
+        socket.emit("admin command", { room: currentRoom, username: currentUser, command: text });
+      } else {
+        socket.emit("chat message", { room: currentRoom, user: currentUser, text });
+      }
+      messageInput.value = "";
+    };
+
+    socket.on("chat message", ({ user, text }) => {
+      const msg = document.createElement("div");
+      msg.textContent = user + ": " + text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    socket.on("user joined", (username) => {
+      const msg = document.createElement("div");
+      msg.textContent = `${username} is toegetreden tot de chat`;
+      chatBox.appendChild(msg);
+    });
+
+    socket.on("clear chat", () => chatBox.innerHTML = "");
+    socket.on("kick", (name) => {
+      if (currentUser === name) {
+        alert("Je bent verwijderd uit de chat.");
+        location.reload();
+      }
+    });
+    socket.on("rename", ({ oldName, newName }) => {
+      if (currentUser === oldName) {
+        currentUser = newName;
+        alert("Je naam is veranderd in " + newName);
+      }
+    });
+  </script>
 </body>
 </html>
