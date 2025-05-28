@@ -1,77 +1,57 @@
 const socket = io();
-
-let username = "";
-let room = "";
-
-const loginForm = document.getElementById("loginForm");
-const usernameInput = document.getElementById("username");
-const roomInput = document.getElementById("room");
 const chatBox = document.getElementById("chat");
-const loginBox = document.getElementById("login");
-const roomTitle = document.getElementById("roomTitle");
+const passwordInput = document.getElementById("password");
+const joinBtn = document.getElementById("join");
+const sendBtn = document.getElementById("send");
+const messageInput = document.getElementById("message");
+let currentUser = "";
+let currentRoom = "";
 
-const form = document.getElementById("form");
-const input = document.getElementById("input");
-const messages = document.getElementById("messages");
+joinBtn.onclick = () => {
+  const username = document.getElementById("username").value;
+  const room = document.getElementById("room").value;
+  const password = passwordInput?.value || "";
+  if (!username || !room) return;
+  currentUser = username;
+  currentRoom = room;
+  socket.emit("join room", { username, room, password });
+  document.getElementById("login").style.display = "none";
+  document.getElementById("chatContainer").style.display = "flex";
+};
 
-loginForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  username = usernameInput.value.trim();
-  room = roomInput.value.trim();
-  if (username && room) {
-    loginBox.style.display = "none";
-    chatBox.style.display = "block";
-    roomTitle.textContent = `Chatcode: ${room}`;
-    socket.emit("join room", { username, room });
-  }
-});
-
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const text = input.value.trim();
-  if (!text) return;
+sendBtn.onclick = () => {
+  const text = messageInput.value;
   if (text.startsWith("/")) {
-    // Stuur command apart
-    socket.emit("admin command", { room, username, command: text });
+    socket.emit("admin command", { room: currentRoom, username: currentUser, command: text });
   } else {
-    socket.emit("chat message", { room, user: username, text });
+    socket.emit("chat message", { room: currentRoom, user: currentUser, text });
   }
-  input.value = '';
+  messageInput.value = "";
+};
+
+socket.on("chat message", ({ user, text }) => {
+  const msg = document.createElement("div");
+  msg.textContent = user + ": " + text;
+  chatBox.appendChild(msg);
+  chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-socket.on("chat message", (msg) => {
-  const item = document.createElement("li");
-  item.textContent = msg.user + ": " + msg.text;
-  messages.appendChild(item);
-  messages.scrollTop = messages.scrollHeight;
+socket.on("user joined", (username) => {
+  const msg = document.createElement("div");
+  msg.textContent = `${username} is toegetreden tot de chat`;
+  chatBox.appendChild(msg);
 });
 
-socket.on("user joined", (name) => {
-  const item = document.createElement("li");
-  item.textContent = `${name} is toegetreden tot de chat`;
-  item.style.fontStyle = "italic";
-  messages.appendChild(item);
-  messages.scrollTop = messages.scrollHeight;
-});
-
-socket.on("clear chat", () => {
-  messages.innerHTML = "";
-});
-
+socket.on("clear chat", () => chatBox.innerHTML = "");
 socket.on("kick", (name) => {
-  if (name === username) {
-    alert("Je bent verwijderd uit de chat door een admin.");
-    window.location.reload();
+  if (currentUser === name) {
+    alert("Je bent verwijderd uit de chat.");
+    location.reload();
   }
 });
-
 socket.on("rename", ({ oldName, newName }) => {
-  if (username === oldName) {
-    username = newName;
-    alert(`Je naam is veranderd naar: ${newName}`);
+  if (currentUser === oldName) {
+    currentUser = newName;
+    alert("Je naam is veranderd in " + newName);
   }
-  const item = document.createElement("li");
-  item.textContent = `${oldName} heet nu ${newName}`;
-  item.style.fontStyle = "italic";
-  messages.appendChild(item);
 });
