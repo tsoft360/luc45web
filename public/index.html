@@ -4,21 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Chat App</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Chat App</h1>
   <div id="login">
     <input type="text" id="username" placeholder="Gebruikersnaam" required />
     <input type="text" id="room" placeholder="Chatcode (bijv. abc123)" required />
-    <input type="password" id="input" placeholder="(alleen admin) wachtwoord" />
-    <button id="submit">Join</button>
+    <input type="password" id="password" placeholder="(alleen admin) wachtwoord" />
+    <button id="join">Join</button>
   </div>
+
   <div id="chatContainer" style="display:none;">
     <div id="chat"></div>
-    <input id="message" placeholder="Typ een bericht..." autocomplete="off" /><button id="send">Stuur</button>
+    <input id="message" placeholder="Typ een bericht..." autocomplete="off" />
+    <button id="send">Stuur</button>
   </div>
+
   <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js" defer>
+  <script src="script.js" defer></script>
 </body>
 </html>
