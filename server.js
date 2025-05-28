@@ -7,11 +7,21 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static("public"));
 
-const users = {}; // socket.id -> { username, room }
-const bannedUsers = {}; // room -> [usernames]
+const ADMIN_PASSWORD = "geheim123";
+
+const users = {};
+const bannedUsers = {};
 
 io.on("connection", (socket) => {
-  socket.on("join room", ({ username, room }) => {
+  socket.on("join room", ({ username, room, password }) => {
+    if (username === "admin" && password !== ADMIN_PASSWORD) {
+      socket.emit("chat message", {
+        user: "Systeem",
+        text: "Ongeldig admin-wachtwoord."
+      });
+      return;
+    }
+
     if (!bannedUsers[room]) bannedUsers[room] = [];
     if (bannedUsers[room].includes(username)) {
       socket.emit("chat message", {
@@ -20,6 +30,7 @@ io.on("connection", (socket) => {
       });
       return;
     }
+
     socket.join(room);
     users[socket.id] = { username, room };
     io.to(room).emit("user joined", username);
@@ -30,9 +41,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("admin command", ({ room, username, command }) => {
-    const isAdmin = username === "admin";
-    if (!isAdmin) return;
-
+    if (username !== "admin") return;
     const parts = command.trim().split(" ");
     const cmd = parts[0];
     const arg = parts[1];
