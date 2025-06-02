@@ -14,9 +14,19 @@ const ADMIN_PASSWORD = "geheim123";
 
 io.on("connection", (socket) => {
    socket.on("join room", ({ username, room, password }) => {
-     if (password !== ADMIN_PASSWORD) {
-       socket.emit("chat message", { user: "Systeem", text: "Als Admin moet je inloggen." });
-    return;
+     socket.join(room);
+     socket.username = username;
+     socket.room = room;
+   
+     if (!rooms[room]) rooms[room] = { users: {}, admins: [] };
+     rooms[room].users[socket.id] = username;
+   
+     if (password === ADMIN_PASSWORD) {
+       rooms[room].admins.push(username);
+     }
+   
+     io.to(room).emit("user joined", username);
+   });
   }
 
   socket.join(room);
