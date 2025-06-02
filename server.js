@@ -13,7 +13,11 @@ const bannedUsers = {};
 const ADMIN_PASSWORD = "geheim123";
 
 io.on("connection", (socket) => {
-  socket.on("join room", ({ username, room, password }) => {
+   socket.on("join room", ({ username, room, password }) => {
+    if (password !== ADMIN_PASSWORD) {
+      socket.emit("chat message", { user: "Systeem", text: "Alleen admins mogen inloggen." });
+      return;
+    }
     if (bannedUsers[room]?.includes(username)) {
       socket.emit("chat message", { user: "Systeem", text: "Je bent verbannen uit deze chat." });
       return;
