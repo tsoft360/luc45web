@@ -26,7 +26,7 @@ io.on("connection", (socket) => {
      }
    
      io.to(room).emit("user joined", username);
-   }}));
+   }});
 
   socket.join(room);
   socket.username = username;
