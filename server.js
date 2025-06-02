@@ -10,7 +10,7 @@ app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public/index.html"
 
 const rooms = {};
 const bannedUsers = {};
-const ADMIN_PASSWORD = "geheim123"; // 👈 verander dit naar jouw eigen admin-wachtwoord
+const ADMIN_PASSWORD = "geheim123";
 
 io.on("connection", (socket) => {
   socket.on("join room", ({ username, room, password }) => {
