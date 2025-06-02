@@ -29,9 +29,7 @@ io.on("connection", (socket) => {
 
     if (!rooms[room]) rooms[room] = { users: {}, admins: [] };
     rooms[room].users[socket.id] = username;
-
-    if (password === ADMIN_PASSWORD) rooms[room].admins.push(username);
-
+      
     io.to(room).emit("user joined", username);
   });
 
