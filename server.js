@@ -14,23 +14,21 @@ const ADMIN_PASSWORD = "geheim123";
 
 io.on("connection", (socket) => {
    socket.on("join room", ({ username, room, password }) => {
-    if (password !== ADMIN_PASSWORD) {
-      socket.emit("chat message", { user: "Systeem", text: "Alleen admins mogen inloggen." });
-      return;
-    }
-    if (bannedUsers[room]?.includes(username)) {
-      socket.emit("chat message", { user: "Systeem", text: "Je bent verbannen uit deze chat." });
-      return;
-    }
+  if (password !== ADMIN_PASSWORD) {
+    socket.emit("chat message", { user: "Systeem", text: "Alleen admins mogen inloggen." });
+    return;
+  }
 
-    socket.join(room);
-    socket.username = username;
-    socket.room = room;
+  socket.join(room);
+  socket.username = username;
+  socket.room = room;
 
-    if (!rooms[room]) rooms[room] = { users: {}, admins: [] };
-    rooms[room].users[socket.id] = username;
-      
-    io.to(room).emit("user joined", username);
+  if (!rooms[room]) rooms[room] = { users: {}, admins: [] };
+
+  rooms[room].admins.push(username); // 👈 voeg toe aan adminlijst
+  rooms[room].users[socket.id] = username;
+
+  io.to(room).emit("user joined", username);
   });
 
   socket.on("chat message", ({ room, user, text }) => {
