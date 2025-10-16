@@ -13,39 +13,31 @@ const bannedUsers = {};
 const ADMIN_PASSWORD = "geheim123";
 
 io.on("connection", (socket) => {
-   socket.on("join room", ({ username, room, password }) => {
-     socket.join(room);
-     socket.username = username;
-     socket.room = room;
-   
-     if (!rooms[room]) rooms[room] = { users: {}, admins: [] };
-     rooms[room].users[socket.id] = username;
-   
-     if (password === ADMIN_PASSWORD) {
-       rooms[room].admins.push(username);
-     }
-   
-     io.to(room).emit("user joined", username);
-   }});
+  // join room
+  socket.on("join room", ({ username, room, password }) => {
+    socket.join(room);
+    socket.username = username;
+    socket.room = room;
 
-  socket.join(room);
-  socket.username = username;
-  socket.room = room;
+    if (!rooms[room]) rooms[room] = { users: {}, admins: [] };
+    rooms[room].users[socket.id] = username;
 
-  if (!rooms[room]) rooms[room] = { users: {}, admins: [] };
+    // Alleen toevoegen als correct wachtwoord
+    if (password === ADMIN_PASSWORD) {
+      rooms[room].admins.push(username);
+    }
 
-  rooms[room].admins.push(username); // 👈 voeg toe aan adminlijst
-  rooms[room].users[socket.id] = username;
-
-  io.to(room).emit("user joined", username);
+    io.to(room).emit("user joined", username);
   });
 
+  // chat bericht
   socket.on("chat message", ({ room, user, text }) => {
     io.to(room).emit("chat message", { user, text });
   });
 
+  // admin command
   socket.on("admin command", ({ room, username, command }) => {
-    if (!rooms[room]?.admins.includes(username)) return;
+    if (!rooms[room]?.admins.includes(username)) return; // niet-admin mag niet
 
     const parts = command.split(" ");
     const cmd = parts[0];
@@ -81,6 +73,7 @@ io.on("connection", (socket) => {
     }
   });
 
+  // disconnect
   socket.on("disconnect", () => {
     const room = socket.room;
     if (rooms[room]) {
