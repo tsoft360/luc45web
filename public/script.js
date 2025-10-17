@@ -11,8 +11,17 @@ let currentRoom = "";
 let currentRole = "user"; // standaardrol
 
 leaveBtn.onclick = () => { 
-  const username = document.getElementById("username").value.trim();
-  socket.emit("leaved", username);
+  if (!currentRoom) return;
+
+  socket.emit("leave room", { username: currentUser, room: currentRoom });
+  
+  // Reset de lokale status
+  currentRoom = "";
+  document.getElementById("chatContainer").style.display = "none";
+  document.getElementById("login").style.display = "flex";
+  chatBox.innerHTML = "";
+
+  appendSystemMessage("Je hebt de chat verlaten.");
 }
 
 // Inloggen / joinen van een room
