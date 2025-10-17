@@ -84,6 +84,12 @@ socket.on("kick", (name) => {
   }
 });
 
+socket.on("leaved", (name) => {
+  if (currentUser === name) {
+    location.reload();
+  }
+});
+
 // Naam veranderd
 socket.on("rename", ({ oldName, newName }) => {
   if (currentUser === oldName) {
