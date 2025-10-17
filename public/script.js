@@ -3,6 +3,7 @@ const chatBox = document.getElementById("chat");
 const passwordInput = document.getElementById("password");
 const joinBtn = document.getElementById("join");
 const sendBtn = document.getElementById("send");
+const leaveBtn = document.getElementById("leaved");
 const messageInput = document.getElementById("message");
 
 let currentUser = "";
