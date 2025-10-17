@@ -9,6 +9,11 @@ let currentUser = "";
 let currentRoom = "";
 let currentRole = "user"; // standaardrol
 
+leaveBtn.onclick = () => { 
+  const username = document.getElementById("username").value.trim();
+  socket.emit("leaved", {username});
+}
+
 // Inloggen / joinen van een room
 joinBtn.onclick = () => {
   const username = document.getElementById("username").value.trim();
