@@ -1,7 +1,7 @@
 {
-  "name": "chat-app-rooms",
+  "name": "chat-app",
   "version": "1.0.0",
-  "description": "Chat met unieke codes per kamer",
+  "description": "Chat app",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
