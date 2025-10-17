@@ -43,7 +43,6 @@ io.on("connection", (socket) => {
         text: `${username} heeft de chat verlaten.`
       });
     }
-    location.reload();
   });
 
   // chat bericht
