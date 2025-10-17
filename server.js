@@ -29,6 +29,21 @@ io.on("connection", (socket) => {
 
     io.to(room).emit("user joined", username);
   });
+  socket.on("leave room", ({ username, room }) => {
+    socket.leave(room);
+  
+    if (rooms[room]) {
+      delete rooms[room].users[socket.id];
+  
+      // Optioneel: verwijder adminstatus
+      rooms[room].admins = rooms[room].admins.filter(a => a !== username);
+  
+      io.to(room).emit("chat message", {
+        user: "Systeem",
+        text: `${username} heeft de chat verlaten.`
+      });
+    }
+  });
 
   // chat bericht
   socket.on("chat message", ({ room, user, text }) => {
