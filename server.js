@@ -56,7 +56,7 @@ io.on("connection", (socket) => {
 
     const parts = command.split(" ");
     const cmd = parts[0];
-    const arg = parts[1];
+    const arg = command.slice(cmd.length).trim();
 
     switch (cmd) {
       case "/ban":
@@ -76,11 +76,13 @@ io.on("connection", (socket) => {
         io.to(room).emit("clear chat");
         break;
       case "/rename":
-        const newName = parts[2];
+        const args = command.slice(cmd.length).trim().split(" ");
+        const oldName = args[0];
+        const newName = args.slice(1).join(" ");
         for (let [id, name] of Object.entries(rooms[room].users)) {
-          if (name === arg) {
+          if (name === oldName) {
             rooms[room].users[id] = newName;
-            io.to(id).emit("rename", { oldName: arg, newName });
+            io.to(id).emit("rename", { oldName: oldName, newName });
             break;
           }
         }
